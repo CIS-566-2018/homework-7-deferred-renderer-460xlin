@@ -28,6 +28,5 @@ void main()
     mat3 view = mat3(u_View);
     fs_Nor = vec4(view * invTranspose * vec3(vs_Nor), 0);
     fs_Pos = u_View * u_Model * vs_Pos;
-    
     gl_Position = u_Proj * u_View * u_Model * vs_Pos;
 }

@@ -7,7 +7,8 @@ import {vec3, vec4, mat4} from 'gl-matrix';
 
 class PostProcess extends ShaderProgram {
 	static screenQuad: Square = undefined; // Quadrangle onto which we draw the frame texture of the last render pass
-	unifFrame: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad
+	unifFrame: WebGLUniformLocation; // The handle of a sampler2D in our shader which samples the texture drawn to the quad]
+	unifGrey: WebGLUniformLocation;
 	name: string;
 
 	constructor(fragProg: Shader, tag: string = "default") {
