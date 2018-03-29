@@ -40,12 +40,11 @@ void main() {
 	vec4 H = vec4(1, 0, 0, 0) * len * 1.0 * tan(a);
 	vec4 gb1_pos = ref + NDC.x * H + NDC.y * V;
 
-
-
-
 	// Lambert shading 
 	vec4 lightDir = m_light - gb1_pos;
-	float lightInteristy = dot(normalize(lightDir), gb0_normal) * 10.0;
+	float lightInteristy = dot(normalize(lightDir), gb0_normal);
+	lightInteristy = clamp(lightInteristy, 0.0, 1.0);
+
 	float ambientTerm = 0.2;
 	
 	

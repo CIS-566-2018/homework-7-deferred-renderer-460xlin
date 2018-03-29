@@ -26,6 +26,8 @@ class OpenGLRenderer {
   post32Buffers: WebGLFramebuffer[];
   post32Targets: WebGLTexture[];
 
+  post32BloomBuffer: WebGLFramebuffer;
+  post32BloomTarget: WebGLTexture[];
 
   // post-processing buffers post-tonemapping (8-bit color)
   post8Buffers: WebGLFramebuffer[];
@@ -71,15 +73,17 @@ class OpenGLRenderer {
     this.post32Buffers = [undefined, undefined];
     this.post32Targets = [undefined, undefined];
     this.post32Passes = [];
-
-
     
+    this.post32BloomBuffer = undefined;
+    this.post32BloomTarget = [undefined, undefined];
+
     // TODO: these are placeholder post shaders, replace them with something good
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost-frag.glsl'))));
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
    
-    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
     this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
+    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+    
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -98,13 +102,6 @@ class OpenGLRenderer {
     gl.uniform1i(gb0loc, 0);
     gl.uniform1i(gb1loc, 1);
     gl.uniform1i(gb2loc, 2);
-
-
-
-    // add special texture for bloom shader
-    // var bloom_grey = gl.getUniformLocation(this.post32Passes[1].prog, "u_grey");
-    // this.post32Passes[1].use();
-    // gl.uniform1i(bloom_grey, 1);
 
   }
 
@@ -162,10 +159,14 @@ class OpenGLRenderer {
 
     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
+
+
+
     // create the framebuffers for post processing
+    // 8 bit buffers have unsigned byte textures of type gl.RGBA8
     for (let i = 0; i < this.post8Buffers.length; i++) {
 
-      // 8 bit buffers have unsigned byte textures of type gl.RGBA8
+      
       this.post8Buffers[i] = gl.createFramebuffer();
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[i]);
       gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
@@ -184,9 +185,41 @@ class OpenGLRenderer {
         console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
       }
 
-      // console.log("enter 32 buffer ");
-      // 32 bit buffers have float textures of type gl.RGBA32F
-      // 32 bit buffers have float textures of type gl.RGBA32F
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+
+    // ================= bloom shader, the example-post are supposed to output 2 same texture ========= //
+    this.post32BloomBuffer = gl.createFramebuffer();
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32BloomBuffer);
+    gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+
+    this.post32BloomTarget[0] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget[0]);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32BloomTarget[0], 0);
+
+    this.post32BloomTarget[1] = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget[1]);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+    gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT1, gl.TEXTURE_2D, this.post32BloomTarget[1], 0);
+
+    FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+    if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+      console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
+    }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+    // 32 bit buffers have float textures of type gl.RGBA32F
+    for (let i = 0; i < this.post32Buffers.length; i++) {      
       this.post32Buffers[i] = gl.createFramebuffer()
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[i]);
       gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
@@ -199,10 +232,6 @@ class OpenGLRenderer {
       gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
       gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
       gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32Targets[i], 0);
-
-      // open the second texture slot for 32 frame buffer.
-      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
-      // gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + 1, gl.TEXTURE_2D, this.gbTargets[i], 0);
 
       FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
       if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
@@ -303,16 +332,26 @@ class OpenGLRenderer {
     // TODO: replace this with your post 32-bit pipeline
     // the loop shows how to swap between frame buffers and textures given a list of processes,
     // but specific shaders (e.g. bloom) need specific info as textures  
+
+    gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32BloomBuffer);
+
+    gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
+    gl.disable(gl.DEPTH_TEST);
+    gl.enable(gl.BLEND);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[0]);
+
+    this.post32Passes[0].draw();
+
     let i = 0;
-    for (i = 0; i < this.post32Passes.length; i++){
-      // console.log(i);
-      // console.log(this.post32Passes.length);
+    for (i = 1; i < this.post32Passes.length; i++){
       // Pingpong framebuffers for each pass.
       // In other words, repeatedly flip between storing the output of the
       // current post-process pass in post32Buffers[1] and post32Buffers[0].
       gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]);
 
-      // console.log("Enter forloop");
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
       gl.disable(gl.DEPTH_TEST);
       gl.enable(gl.BLEND);
@@ -322,21 +361,23 @@ class OpenGLRenderer {
       // the output of a render pass. post32Targets is the array that stores
       // these textures, so we alternate reading from the 0th and 1th textures
       // each frame (the texture we wrote to in our previous render pass).
-      gl.activeTexture(gl.TEXTURE0);
-      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
 
-      if( i == 1)
-      {
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[0]);
-      }
+
 
       // bind special texture for bloom shader
-      // if( i == 1)
-      // {
-      //   gl.activeTexture(gl.TEXTURE1);
-      //   gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget);
-      // }
+      if( i == 1)
+      {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget[0]);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget[1]);
+      }
+      else
+      {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
+      }
 
       this.post32Passes[i].draw();
 
