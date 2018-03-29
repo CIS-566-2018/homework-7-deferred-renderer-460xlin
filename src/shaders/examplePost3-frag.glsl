@@ -42,5 +42,5 @@ void main() {
 	// }
 	// out_Col[0] = vec4(1.0, 0.0, 0.0, 1.0);
 	// out_Col[1] = vec4(1.0, 0.0, 0.0, 1.0);
-	out_Col = vec4(1.0, 0.0, 0.0, 1.0);
+	out_Col = vec4(color, 1.0);
 }
