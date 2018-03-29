@@ -27,7 +27,7 @@ class OpenGLRenderer {
   post32Targets: WebGLTexture[];
 
   // a special texture for bloom shading effect
-  post32BloomTarget: WebGLTexture;
+  // post32BloomTarget: WebGLTexture;
 
   // post-processing buffers post-tonemapping (8-bit color)
   post8Buffers: WebGLFramebuffer[];
@@ -78,7 +78,7 @@ class OpenGLRenderer {
    // this.post32BloomBuffer = undefined;
 
     // a special texture handle for bloom shader
-    this.post32BloomTarget = undefined;
+    // this.post32BloomTarget = undefined;
 
     
     // TODO: these are placeholder post shaders, replace them with something good
@@ -86,7 +86,7 @@ class OpenGLRenderer {
     this.add8BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost2-frag.glsl'))));
    
     this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
-    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
+    // this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
 
     if (!gl.getExtension("OES_texture_float_linear")) {
       console.error("OES_texture_float_linear not available");
@@ -109,9 +109,9 @@ class OpenGLRenderer {
 
 
     // add special texture for bloom shader
-    var bloom_grey = gl.getUniformLocation(this.post32Passes[1].prog, "u_grey");
-    this.post32Passes[1].use();
-    gl.uniform1i(bloom_grey, 1);
+    // var bloom_grey = gl.getUniformLocation(this.post32Passes[1].prog, "u_grey");
+    // this.post32Passes[1].use();
+    // gl.uniform1i(bloom_grey, 1);
 
   }
 
@@ -191,69 +191,72 @@ class OpenGLRenderer {
         console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
       }
 
-      if(i !== 0)
+      if(1)
       {
+        // console.log("enter 32 buffer ");
         // 32 bit buffers have float textures of type gl.RGBA32F
-        this.post32Buffers[i] = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[i]);
-        gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
+      // 32 bit buffers have float textures of type gl.RGBA32F
+      this.post32Buffers[i] = gl.createFramebuffer()
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[i]);
+      gl.drawBuffers([gl.COLOR_ATTACHMENT0]);
 
-        this.post32Targets[i] = gl.createTexture();
-        gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[i]);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32Targets[i], 0);
+      this.post32Targets[i] = gl.createTexture();
+      gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[i]);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+      gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+      gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32Targets[i], 0);
 
-        FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-        if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-          console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
-        }
+      FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+      if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+        console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
+      }
       }
       else {
-            // ==================== special texture for bloom shader =========================== //
-            // the second post32 is bloom
-            // the first post32 need to output a greyscale texture for bloom
-            // so the texture is created for bloom.
-            // but the information in the texture is from the first post32, which means the first one need to have 2 Target
-            this.post32Buffers[i] = gl.createFramebuffer();
-            gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[i]);
-            gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
+        // console.log("enter bloom buffer");
+        //     // ==================== special texture for bloom shader =========================== //
+        //     // the second post32 is bloom
+        //     // the first post32 need to output a greyscale texture for bloom
+        //     // so the texture is created for bloom.
+        //     // but the information in the texture is from the first post32, which means the first one need to have 2 Target
+        //     this.post32Buffers[i] = gl.createFramebuffer();
+        //     gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[i]);
+        //     gl.drawBuffers([gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1]);
 
-            this.post32Targets[i] = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[i]);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32Targets[i], 0);
-            FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-            if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-              console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
-            }
+        //     this.post32Targets[i] = gl.createTexture();
+        //     gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[i]);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+        //     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.post32Targets[i], 0);
+        //     FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        //     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+        //       console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 8 bit FBO\n");
+        //     }
 
 
-            this.post32BloomTarget = gl.createTexture();
-            gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-            gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        //     this.post32BloomTarget = gl.createTexture();
+        //     gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+        //     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
             
-            gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
-            gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + 1, gl.TEXTURE_2D, this.post32BloomTarget, 0);
+        //     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, gl.drawingBufferWidth, gl.drawingBufferHeight, 0, gl.RGBA, gl.FLOAT, null);
+        //     gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + 1, gl.TEXTURE_2D, this.post32BloomTarget, 0);
 
 
-            FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
-            if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
-              console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 32-bloom bit FBO\n");
-            }
+        //     FBOstatus = gl.checkFramebufferStatus(gl.FRAMEBUFFER);
+        //     if (FBOstatus != gl.FRAMEBUFFER_COMPLETE) {
+        //       console.error("GL_FRAMEBUFFER_COMPLETE failed, CANNOT use 32-bloom bit FBO\n");
+        //     }
             
 
-            // ==================== special texture for bloom shader ends =========================== //
+        //     // ==================== special texture for bloom shader ends =========================== //
       }
     }
   
@@ -353,10 +356,12 @@ class OpenGLRenderer {
     // but specific shaders (e.g. bloom) need specific info as textures  
     let i = 0;
     for (i = 0; i < this.post32Passes.length; i++){
+      // console.log(i);
+      // console.log(this.post32Passes.length);
       // Pingpong framebuffers for each pass.
       // In other words, repeatedly flip between storing the output of the
       // current post-process pass in post32Buffers[1] and post32Buffers[0].
-      // gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]);
+      gl.bindFramebuffer(gl.FRAMEBUFFER, this.post32Buffers[(i + 1) % 2]);
 
       // console.log("Enter forloop");
       gl.viewport(0, 0, gl.drawingBufferWidth, gl.drawingBufferHeight);
@@ -372,11 +377,11 @@ class OpenGLRenderer {
       gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
 
       // bind special texture for bloom shader
-      if( i == 1)
-      {
-        gl.activeTexture(gl.TEXTURE1);
-        gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget);
-      }
+      // if( i == 1)
+      // {
+      //   gl.activeTexture(gl.TEXTURE1);
+      //   gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget);
+      // }
 
       this.post32Passes[i].draw();
 
@@ -390,6 +395,7 @@ class OpenGLRenderer {
     // TODO: if you significantly change your framework, ensure this doesn't cause bugs!
     // render to the first 8 bit buffer if there is more post, else default buffer
     if (this.post8Passes.length > 0) {
+      // console.log("enter8pass");
       // gl .bindFramebuffer(gl.FRAMEBUFFER, this.post8Buffers[0]);
     }
     else {

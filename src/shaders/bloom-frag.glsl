@@ -12,5 +12,5 @@ uniform float u_Time;
 
 void main() {
 	vec3 color = texture(u_frame, fs_UV).xyz;
-	out_Col = vec4(color, 1.0);
+	// out_Col = vec4(1.0, 0.0, 0.0, 1.0);
 }

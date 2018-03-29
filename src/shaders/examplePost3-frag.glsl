@@ -4,7 +4,9 @@ precision highp float;
 // uniform vec2 u_Dimensions;
 
 in vec2 fs_UV;
-out vec4 out_Col[2];
+// out vec4 out_Col[2];
+// out vec4 outColor;
+out vec4 out_Col;
 
 #define EPS 0.4
 // float k[25] = float[](0.037823,	0.039428,	0.039978,	0.039428,	0.037823,
@@ -40,4 +42,5 @@ void main() {
 	// }
 	// out_Col[0] = vec4(1.0, 0.0, 0.0, 1.0);
 	// out_Col[1] = vec4(1.0, 0.0, 0.0, 1.0);
+	out_Col = vec4(1.0, 0.0, 0.0, 1.0);
 }
