@@ -7,12 +7,12 @@ class PostProcess extends ShaderProgram {
         super([new Shader(gl.VERTEX_SHADER, require('../../shaders/screenspace-vert.glsl')),
             fragProg]);
         this.unifFrame = gl.getUniformLocation(this.prog, "u_frame");
-        this.unifGrey = gl.getUniformLocation(this.prog, "u_grey");
+        this.unifFrame2 = gl.getUniformLocation(this.prog, "u_frame2");
         this.use();
         this.name = tag;
         // bind texture unit 0 to this location
         gl.uniform1i(this.unifFrame, 0); // gl.TEXTURE0
-        gl.uniform1i(this.unifGrey, 1); // gl.TEXTURE1
+        gl.uniform1i(this.unifFrame2, 1);
         if (PostProcess.screenQuad === undefined) {
             PostProcess.screenQuad = new Square(vec3.fromValues(0, 0, 0));
             PostProcess.screenQuad.create();

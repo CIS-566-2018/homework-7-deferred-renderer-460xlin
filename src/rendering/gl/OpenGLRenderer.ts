@@ -4,7 +4,6 @@ import Camera from '../../Camera';
 import {gl} from '../../globals';
 import ShaderProgram, {Shader} from './ShaderProgram';
 import PostProcess from './PostProcess';
-import SkyBox from './SkyBox';
 import Square from '../../geometry/Square';
 import Quad from '../../geometry/Quad';
 
@@ -49,10 +48,6 @@ class OpenGLRenderer {
     new Shader(gl.FRAGMENT_SHADER, require('../../shaders/tonemap-frag.glsl'))
     );
 
-  skyPass : SkyBox = new SkyBox(
-    new Shader(gl.FRAGMENT_SHADER, require('../../shaders/skyBox-frag.glsl'))
-  );
-
   add8BitPass(pass: PostProcess) {
     this.post8Passes.push(pass);
   }
@@ -83,6 +78,7 @@ class OpenGLRenderer {
    
     this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/bloom-frag.glsl'))));
     this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/examplePost3-frag.glsl'))));
+    this.add32BitPass(new PostProcess(new Shader(gl.FRAGMENT_SHADER, require('../../shaders/dof-frag.glsl'))));
     
 
     if (!gl.getExtension("OES_texture_float_linear")) {
@@ -244,7 +240,6 @@ class OpenGLRenderer {
 
   updateTime(deltaTime: number, currentTime: number) {
     this.deferredShader.setTime(currentTime);
-    this.skyPass.setTime(currentTime);
     for (let pass of this.post8Passes) pass.setTime(currentTime);
     for (let pass of this.post32Passes) pass.setTime(currentTime);
     this.currentTime = currentTime;
@@ -287,16 +282,6 @@ class OpenGLRenderer {
     for (let pass of this.post8Passes) pass.setDimensions(d);
     for (let pass of this.post32Passes) pass.setDimensions(d);
 
-    this.skyPass.setModelMatrix(model);
-    this.skyPass.setViewProjMatrix(viewProj);
-    this.skyPass.setGeometryColor(color);
-    this.skyPass.setViewMatrix(view);
-    this.skyPass.setProjMatrix(proj);
-    this.skyPass.setDimensions(d);
-    this.skyPass.setTime(this.currentTime);
-
-
-    this.skyPass.draw();
     for (let drawable of drawables) {
       gbProg.draw(drawable);
     }
@@ -372,6 +357,14 @@ class OpenGLRenderer {
 
         gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.post32BloomTarget[1]);
+      }
+      else if (i == 2) // DOF shader process
+      {
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.post32Targets[(i) % 2]);
+
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, this.gbTargets[0]);
       }
       else
       {

@@ -62,5 +62,7 @@ void main() {
 	vec3 col = gb2.xyz;
 	col = gb2.xyz * lightTerm;
 
+
+	// vec3 depth = vec3(abs(z_buffer) * 0.01);
 	out_Col = vec4(col, 1.0);
 }

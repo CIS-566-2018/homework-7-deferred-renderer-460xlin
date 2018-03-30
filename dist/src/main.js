@@ -36,7 +36,7 @@ function loadScene() {
     mesh0 && mesh0.destroy();
     square = new Square(vec3.fromValues(0, 0, 0));
     square.create();
-    mesh0 = new Mesh(obj0, vec3.fromValues(0, 0, 0));
+    mesh0 = new Mesh(obj0, vec3.fromValues(5, 5, 0));
     mesh0.create();
     tex0 = new Texture('../resources/textures/wahoo.bmp');
 }
@@ -85,7 +85,7 @@ function main() {
         // render from gbuffers into 32-bit color buffer
         renderer.renderFromGBuffer(camera);
         // apply 32-bit post and tonemap from 32-bit color to 8-bit color
-        // renderer.renderPostProcessHDR();
+        renderer.renderPostProcessHDR();
         // apply 8-bit post and draw
         // renderer.renderPostProcessLDR();
         stats.end();

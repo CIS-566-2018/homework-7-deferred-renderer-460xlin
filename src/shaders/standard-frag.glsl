@@ -27,7 +27,7 @@ void main() {
     col = pow(col, vec3(2.2));
 
     // Put camera-world normal into fragColor[0], which is 32 bit.
-    fragColor[0] = vec4(normalize(fs_Nor).xyz, fs_Pos.w);
+    fragColor[0] = vec4(normalize(fs_Nor).xyz, fs_Pos.z);
     fragColor[1] = vec4(1.0, 1.0, 0.0, 1.0);
     fragColor[2] = vec4(col, 1.0);
 }

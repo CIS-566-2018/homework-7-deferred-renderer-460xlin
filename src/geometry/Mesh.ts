@@ -10,13 +10,14 @@ class Mesh extends Drawable {
   colors: Float32Array;
   uvs: Float32Array;
   center: vec4;
+  tempCenter: vec3;
 
   objString: string;
 
   constructor(objString: string, center: vec3) {
     super(); // Call the constructor of the super class. This is required.
     this.center = vec4.fromValues(center[0], center[1], center[2], 1);
-
+    this.tempCenter = vec3.fromValues(center[0], center[1], center[2]);
     this.objString = objString;
   }
 
@@ -30,7 +31,7 @@ class Mesh extends Drawable {
 
     //posTemp = loadedMesh.vertices;
     for (var i = 0; i < loadedMesh.vertices.length; i++) {
-      posTemp.push(loadedMesh.vertices[i]);
+      posTemp.push(loadedMesh.vertices[i] + this.center[i % 3]);
       if (i % 3 == 2) posTemp.push(1.0);
     }
 
